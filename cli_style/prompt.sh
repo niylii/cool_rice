@@ -73,8 +73,13 @@ build_prompt() {
     DirBubble="${BACKGOUND}${B_BACKGOUND} ${BLUE}  ${currentDir} %k${BACKGOUND}"
     BranchBubble="${BACKGOUND}${B_BACKGOUND} ${VIOLET}${PROMPT_BRANCH} %k${BACKGOUND}"
     TimeBubble="${BACKGOUND}${B_BACKGOUND} ${SKY}${PROMPT_HOUR} %k${BACKGOUND}"
+	if [ $VIRTUAL_ENV ]; then
+		Venvname="⟡$VIRTUAL_ENV:t⟡ |"
+	else
+		Venvname=""
+	fi
 
-     PROMPT="${BACKGOUND}${B_BACKGOUND} ${MAUVE}$USER ${STATUS}%k${BACKGOUND}${RESET} "
+	PROMPT="${BACKGOUND}${B_BACKGOUND} ${MAUVE}$Venvname ${MAUVE}$USER ${STATUS}%k${BACKGOUND}${RESET} "
 
      RPROMPT="${DirBubble} ${BranchBubble} ${TimeBubble}${RESET}"
 }
