@@ -1,3 +1,4 @@
+
 setopt PROMPT_SUBST
 
 # Tokyo Night Night palette
@@ -32,25 +33,27 @@ B_COMMENT="%K{#565f89}"
 SKY="%F{#a1c0e6}"
 VIOLET="%F{#6a7cb6}"
 MAUVE="%F{#c1b5d6}"
+
 BLUE="%F{#3d5497}"
 
 RESET="%f%k"
 
-# Util Functions
+# Utility Functions
 
 clone-from() {
-    if [ -z "$1" ] || [ -z "$2" ]; then
+    if [[ -z "$1" || -z "$2" ]]; then
         echo "Usage: clone-from <user> <repo>"
         return 1
     fi
     git clone "git@github.com:$1/$2.git"
 }
 
-# prompt   
+# Git branch
 
 git_branch() {
+    local branch
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-    [[ -n $branch ]] && echo "$branch"
+    [[ -n "$branch" && "$branch" != "HEAD" ]] && echo "$branch"
 }
 
 PROMPT_STATUS="[%F{%(?.green.red)}%(?.✓.✗)${RESET}]"
@@ -58,30 +61,52 @@ PROMPT_HOUR=" %D{%d},%D{%H:%M}"
 PROMPT_USER_HOST="(${BLUE}%n@%m${RESET})"
 PROMPT_PATH="${BLUE}%~${RESET}"
 
+# Build prompt
+RPROMPT_PREFIX=$'%{\e[1A%}'
+RPROMPT_SUFFIX=$'%{\e[1B%}'
+
 build_prompt() {
+    local branch currentDir venv_display
+    local left_part right_part
+
+    # Git branch
     branch=$(git_branch)
-    if [[ -n $branch ]]; then
+
+    if [[ -n "$branch" ]]; then
         PROMPT_BRANCH=" : $branch"
     else
         PROMPT_BRANCH=" "
     fi
 
+    # Command status
     STATUS="%(?.❯.❮)"
 
+    # Current directory
     currentDir="${PWD/#$HOME/~}"
     currentDir="${currentDir:t}"
+    [[ -z "$currentDir" ]] && currentDir="~"
+
+    # Virtual environment
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        venv_display="⟡ ${VIRTUAL_ENV:t} ⟡ | "
+    else
+        venv_display=""
+    fi
+
+    # Original V1 padded bubbles
+
+    # First line: left section
+    left_part="${COMMENT}╭─${BACKGOUND}${B_BACKGOUND} ${MAUVE}${venv_display}${USER} %k${BACKGOUND}"
     DirBubble="${BACKGOUND}${B_BACKGOUND} ${BLUE}  ${currentDir} %k${BACKGOUND}"
     BranchBubble="${BACKGOUND}${B_BACKGOUND} ${VIOLET}${PROMPT_BRANCH} %k${BACKGOUND}"
     TimeBubble="${BACKGOUND}${B_BACKGOUND} ${SKY}${PROMPT_HOUR} %k${BACKGOUND}"
-	if [ $VIRTUAL_ENV ]; then
-		Venvname="⟡$VIRTUAL_ENV:t⟡ |"
-	else
-		Venvname=""
-	fi
 
-	PROMPT="${BACKGOUND}${B_BACKGOUND} ${MAUVE}$Venvname ${MAUVE}$USER ${STATUS}%k${BACKGOUND}${RESET} "
+	# Left side + second line
+	PROMPT="${left_part}
+${COMMENT}╰─${WHITE}❯${RESET} "
 
-     RPROMPT="${DirBubble} ${BranchBubble} ${TimeBubble}${RESET}"
+	RPROMPT="${RPROMPT_PREFIX}${DirBubble} ${BranchBubble} ${TimeBubble}${RESET}${RPROMPT_SUFFIX}"
 }
-
 precmd() { build_prompt }
+
+
